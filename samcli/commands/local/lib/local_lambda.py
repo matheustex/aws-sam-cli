@@ -53,17 +53,31 @@ class LocalLambdaRunner(object):
 
         This function will block until either the function completes or times out.
 
-        :param string function_name: Name of the Lambda function to invoke
-        :param string event: Event data passed to the function. Must be a valid JSON String.
-        :param io.BaseIO stdout: Stream to write the output of the Lambda function to.
-        :param io.BaseIO stderr: Stream to write the Lambda runtime logs to.
-        :raises FunctionNotfound: When we cannot find a function with the given name
+        Parameters
+        ----------
+        function_name str
+            Name of the Lambda function to invoke
+        event str
+            Event data passed to the function. Must be a valid JSON String.
+        stdout samcli.lib.utils.stream_writer.StreamWriter
+            Stream writer to write the output of the Lambda function to.
+        stderr samcli.lib.utils.stream_writer.StreamWriter
+            Stream writer to write the Lambda runtime logs to.
+
+        Raises
+        ------
+        FunctionNotfound
+            When we cannot find a function with the given name
         """
 
         # Generate the correct configuration based on given inputs
         function = self.provider.get(function_name)
 
         if not function:
+            all_functions = [f.name for f in self.provider.get_all()]
+            available_function_message = "{} not found. Possible options in your template: {}"\
+                .format(function_name, all_functions)
+            LOG.info(available_function_message)
             raise FunctionNotFound("Unable to find a Function with name '%s'", function_name)
 
         LOG.debug("Found one Lambda function with name '%s'", function_name)
